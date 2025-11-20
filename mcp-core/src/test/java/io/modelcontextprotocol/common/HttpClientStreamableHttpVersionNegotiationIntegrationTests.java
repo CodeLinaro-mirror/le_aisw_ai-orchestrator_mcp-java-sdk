@@ -89,7 +89,7 @@ class HttpClientStreamableHttpVersionNegotiationIntegrationTests {
 	}
 
 	@Test
-	void usesCustomLatestVersion() {
+	void usesServerSupportedVersion() {
 		startTomcat();
 
 		var transport = HttpClientStreamableHttpTransport.builder("http://localhost:" + PORT)
@@ -102,18 +102,22 @@ class HttpClientStreamableHttpVersionNegotiationIntegrationTests {
 
 		var calls = requestRecordingFilter.getCalls();
 
-		assertThat(calls).filteredOn(c -> !c.body().contains("\"method\":\"initialize\""))
-			// GET /mcp ; POST notification/initialized ; POST tools/call
-			.hasSize(3)
+		// Initialize does not know the server's protocol
+		// We can't easily set the correct protocol on the GET /mcp call,
+		// as it happens too early
+		assertThat(calls).filteredOn(c -> c.method().equals("POST") && !c.body().contains("\"method\":\"initialize\""))
+			// POST notification/initialized ; POST tools/call
+			.hasSize(2)
 			.map(McpTestRequestRecordingServletFilter.Call::headers)
-			.allSatisfy(headers -> assertThat(headers).containsEntry("mcp-protocol-version", "2263-03-18"));
+			.allSatisfy(headers -> assertThat(headers).containsEntry("mcp-protocol-version",
+					ProtocolVersions.MCP_2025_06_18));
 
 		assertThat(response).isNotNull();
 		assertThat(response.content()).hasSize(1)
 			.first()
 			.extracting(McpSchema.TextContent.class::cast)
 			.extracting(McpSchema.TextContent::text)
-			.isEqualTo("2263-03-18");
+			.isEqualTo(ProtocolVersions.MCP_2025_06_18);
 		mcpServer.close();
 	}
 
