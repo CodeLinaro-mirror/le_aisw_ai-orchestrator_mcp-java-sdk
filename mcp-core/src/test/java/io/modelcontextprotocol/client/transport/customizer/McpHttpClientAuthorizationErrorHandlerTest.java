@@ -13,7 +13,9 @@ import static org.mockito.Mockito.mock;
 
 /**
  * @author Daniel Garnier-Moiroux
+ * @deprecated use {@link McpHttpClientTransportAuthorizationErrorHandlerTest}
  */
+@Deprecated
 class McpHttpClientAuthorizationErrorHandlerTest {
 
 	private final HttpResponse.ResponseInfo responseInfo = mock(HttpResponse.ResponseInfo.class);
